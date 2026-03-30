@@ -1,12 +1,16 @@
 from django.shortcuts import render
-from django.template.defaultfilters import title
+
+from .models import Post
 
 
 def index(request):
+    all_posts = Post.objects.all()
+
     context = {
-        'posts': []  # Empty list for now, populate when models are created
+        'posts': all_posts,
+        "title": "Home"
     }
-    return render(request, "post/index.html", {"context": context, "title": "Home"})
+    return render(request, "post/index.html", context)
 
 
 def about(request):
@@ -14,8 +18,18 @@ def about(request):
 
 
 def posts(request):
-    return render(request, "post/posts.html", {"title": "Posts"})  # Empty list for now
+    all_posts = Post.objects.all()
+    context = {
+        'posts': all_posts,
+        "title": "Posts"
+    }
+    return render(request, "post/posts.html", context)
 
 
 def post_detail(request, slug):
-    return render(request, "post/post_detail.html", {"slug": slug, "title": title(slug.replace('-', ' '))})
+    post = Post.objects.get(slug=slug)
+    context = {
+        'post': post,
+        'title': post.title
+    }
+    return render(request, "post/post_detail.html", context)
