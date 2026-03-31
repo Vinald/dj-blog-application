@@ -26,8 +26,8 @@
 
                         {% if user.is_authenticated and user == post.author %}
                             <div class="btn-group">
-                                <a href="{% url 'post_update' post.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                <a href="{% url 'post_delete' post.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                                <a href="#" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
                             </div>
                         {% endif %}
                     </div>

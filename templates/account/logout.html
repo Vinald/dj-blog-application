@@ -1,1 +1,23 @@
+{% extends 'auth_base.html' %}
 
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg" style="width: 100%; max-width: 450px;">
+        <div class="card-body p-5 text-center">
+            <h2 class="mb-4">Logged Out</h2>
+
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>Success!</strong> You have been successfully logged out.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <p class="text-muted mb-4">You can log back in anytime to access your account.</p>
+
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="{% url 'index' %}" class="btn btn-secondary">Go Home</a>
+                <a href="{% url 'login' %}" class="btn btn-primary">Login Again</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
