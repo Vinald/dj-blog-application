@@ -27,8 +27,9 @@
                     {% csrf_token %}
 
                     <div class="mb-3">
-                        <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label
-                            }}</label>
+                        <label for="{{ form.username.id_for_label }}" class="form-label">
+                            {{ form.username.label }}
+                        </label>
                         {% if form.username.errors %}
                         {{ form.username|add_class:"form-control is-invalid" }}
                         <div class="invalid-feedback d-block mt-2">
@@ -42,8 +43,9 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label
-                            }}</label>
+                        <label for="{{ form.password.id_for_label }}" class="form-label">
+                            {{ form.password.label }}
+                        </label>
                         {% if form.password.errors %}
                         {{ form.password|add_class:"form-control is-invalid" }}
                         <div class="invalid-feedback d-block mt-2">

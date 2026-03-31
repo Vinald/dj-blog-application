@@ -17,18 +17,16 @@ def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            try:
-                user = form.save()
-                messages.success(
-                    request,
-                    'Account successfully created! Please log in.'
-                )
-                return redirect('login')
-            except IntegrityError:
-                messages.error(
-                    request,
-                    'Registration failed. Please try again.'
-                )
+            user = form.save()
+            messages.success(
+                request,
+                'Account successfully created! Please log in.'
+            )
+            return redirect('account:login')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
         form = RegisterForm()
 

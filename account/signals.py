@@ -5,17 +5,17 @@ from django.dispatch import receiver
 from .models import Profile
 
 
-# Signal to create a profile when a user is created
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     """Create a Profile instance when a new User is created."""
     if created:
-        Profile.objects.create(user=instance)
+        Profile.objects.get_or_create(user=instance)
 
 
-# Signal to save profile when user is saved
 @receiver(post_save, sender=User)
 def save_profile(sender, instance, **kwargs):
     """Save the profile when the user is saved."""
-    if hasattr(instance, 'profile'):
+    try:
         instance.profile.save()
+    except Profile.DoesNotExist:
+        Profile.objects.create(user=instance)
