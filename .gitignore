@@ -164,3 +164,6 @@ celerybeat-schedule
 
 # Vim swap files
 *~
+
+# images
+media/*

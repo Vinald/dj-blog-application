@@ -1,5 +1,46 @@
 {% extends 'base.html' %}
-<!-- Start of the body -->
+
 {% block content %}
-<h1>About Page</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header">
+                    <h1 class="mb-0">📖 About Our Blog</h1>
+                </div>
+                <div class="card-body p-4">
+                    <p class="lead text-muted">
+                        Welcome to our blog! A space dedicated to sharing knowledge, insights, and stories.
+                    </p>
+
+                    <h5 class="mt-4 mb-3">Our Mission</h5>
+                    <p class="lh-lg">
+                        We believe in the power of sharing knowledge and connecting with a community of like-minded
+                        individuals.
+                        Our blog is a platform where ideas come to life and discussions flourish.
+                    </p>
+
+                    <h5 class="mt-4 mb-3">What We Do</h5>
+                    <p class="lh-lg">
+                        Through thoughtfully crafted articles and engaging discussions, we explore topics that matter.
+                        Whether you're here to learn something new or share your expertise, we welcome you.
+                    </p>
+
+                    <h5 class="mt-4 mb-3">Join Us</h5>
+                    <p class="lh-lg">
+                        We're constantly looking for new perspectives and voices. Feel free to
+                        <a href="{% url 'account:register' %}" class="text-decoration-none fw-bold">join our
+                            community</a>
+                        and start sharing your thoughts today!
+                    </p>
+
+                    <div class="alert alert-info mt-4 border-0" role="alert">
+                        <strong>💡 Tip:</strong> Check out our latest posts and connect with other members of our
+                        community.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}

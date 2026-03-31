@@ -11,8 +11,6 @@
         {% else %}
         <title>My Blog</title>
         {% endif %}
-        <!-- Custom CSS -->
-        <link rel="stylesheet" href="{% static 'post/main.css' %}" />
         <!-- Bootstrap CSS -->
         <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
@@ -20,33 +18,45 @@
             integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
             crossorigin="anonymous"
         />
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="{% static 'post/main.css' %}" />
     </head>
     <body>
-        <header class="site-header">{% include 'partials/navbar.html' %}</header>
+        <header class="site-header bg-steel">{% include 'partials/navbar.html' %}</header>
+
         <main role="main" class="container">
-            <div class="row">
-                <div class="col-md-8">
-                    <!-- Display Messages -->
-                    {% if messages %} {% for message in messages %}
-                    <div class="alert alert-info">{{ message }}</div>
-                    {% endfor %} {% endif %}
+            <!-- Display Messages -->
+            {% if messages %}
+            <div class="mt-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="row mt-3">
+                <div class="col-lg-8">
                     <!-- Main Content -->
                     {% block content %}{% endblock %}
                 </div>
-                <div class="col-md-4">
+                <div class="col-lg-4">
                     <div class="content-section">
-                        <h3>Our Sidebar</h3>
-                        <p class="text-muted">You can put any information here you'd like.</p>
+                        <h3 class="mb-3">Latest Updates</h3>
+                        <p class="text-muted mb-3">Stay tuned for the latest posts and announcements from our blog.</p>
                         <ul class="list-group">
-                            <li class="list-group-item list-group-item-light">Latest Posts</li>
-                            <li class="list-group-item list-group-item-light">Announcements</li>
-                            <li class="list-group-item list-group-item-light">Calendars</li>
-                            <li class="list-group-item list-group-item-light">etc</li>
+                            <li class="list-group-item list-group-item-light">📰 Latest Posts</li>
+                            <li class="list-group-item list-group-item-light">📣 Announcements</li>
+                            <li class="list-group-item list-group-item-light">📅 Events</li>
+                            <li class="list-group-item list-group-item-light">💡 Tips & Tricks</li>
                         </ul>
                     </div>
                 </div>
             </div>
         </main>
+
         <!-- Bootstrap JS Bundle -->
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"

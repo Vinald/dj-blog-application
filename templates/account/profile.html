@@ -1,10 +1,96 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'auth_base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block content %}
+<div class="mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Profile Card -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">👤 User Profile</h3>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Profile Picture and Basic Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            {% if user.profile.image %}
+                            <img src="{{ user.profile.image.url }}" alt="Profile Picture"
+                                 class="img-fluid rounded-circle shadow"
+                                 style="width: 180px; height: 180px; object-fit: cover;">
+                            {% else %}
+                            <img src="https://via.placeholder.com/180" alt="Default Profile Picture"
+                                 class="img-fluid rounded-circle shadow" style="width: 180px; height: 180px;">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h4 class="mb-3 fw-bold">{{ user.get_full_name|default:user.username }}</h4>
+
+                            <div class="mb-3">
+                                <strong class="text-muted">Username:</strong>
+                                <p class="mb-0">{{ user.username }}</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong class="text-muted">Email:</strong>
+                                <p class="mb-0">{{ user.email }}</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong class="text-muted">Member Since:</strong>
+                                <p class="mb-0">{{ user.date_joined|date:"F j, Y" }}</p>
+                            </div>
+
+                            {% if user.profile.bio %}
+                            <div class="mb-0">
+                                <strong class="text-muted">Bio:</strong>
+                                <p class="text-muted mb-0">{{ user.profile.bio }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Account Statistics -->
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center py-4">
+                                    <h6 class="card-title text-muted mb-2">Posts Published</h6>
+                                    <h3 class="text-primary fw-bold">{{ user.post_set.count }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center py-4">
+                                    <h6 class="card-title text-muted mb-2">Account Status</h6>
+                                    {% if user.is_active %}
+                                    <span class="badge bg-success fs-6">✓ Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger fs-6">✗ Inactive</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <a href="{% url 'index' %}" class="btn btn-primary">
+                            ← Back to Home
+                        </a>
+                        <a href="{% url 'account:logout' %}" class="btn btn-outline-danger">
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+

@@ -20,7 +20,7 @@
             <!-- Navbar Right Side -->
             <div class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
-                <span class="nav-item nav-link text-muted">Welcome, <strong>{{ user.username }}</strong></span>
+                <a class="nav-item nav-link" href="{% url 'account:profile' %}">Profile</a>
                 <a class="nav-item nav-link" href="{% url 'account:logout' %}">Logout</a>
                 {% else %}
                 <a class="nav-item nav-link" href="{% url 'account:login' %}">Login</a>
