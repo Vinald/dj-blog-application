@@ -43,13 +43,11 @@
     <div class="card-body">
         <h5 class="card-title mb-3">📝 About the Author</h5>
         <div class="d-flex align-items-center">
-            {% if post.author.profile.image %}
-            <img src="{{ post.author.profile.image.url }}" alt="{{ post.author.username }}" class="rounded-circle me-3"
-                 style="width: 60px; height: 60px; object-fit: cover;">
-            {% else %}
-            <img src="https://via.placeholder.com/60" alt="{{ post.author.username }}" class="rounded-circle me-3"
-                 style="width: 60px; height: 60px;">
-            {% endif %}
+            <img src="{{ post.author.profile.image.url }}"
+                 alt="{{ post.author.username }}"
+                 class="rounded-circle me-3"
+                 style="width: 60px; height: 60px; object-fit: cover;"
+                 onerror="this.src='/media/profile_pics/default.jpg'">
             <div>
                 <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
                 <p class="text-muted mb-0 small">{{ post.author.profile.bio|default:"A blog contributor" }}</p>
