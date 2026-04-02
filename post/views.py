@@ -1,49 +1,71 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from django.views import View
+from django.views.generic import ListView, DetailView
 
 from .models import Post
 from .forms import PostForm
 
 
-def index(request):
-    all_posts = Post.objects.all()
+class IndexView(ListView):
+    """Class-based view for displaying all posts on home page."""
+    model = Post
+    template_name = 'post/index.html'
+    context_object_name = 'posts'
+    paginate_by = 10
 
-    context = {
-        'posts': all_posts,
-        "title": "Home"
-    }
-    return render(request, "post/index.html", context)
-
-
-def about(request):
-    return render(request, "post/about.html")
-
-
-def posts(request):
-    all_posts = Post.objects.all()
-    context = {
-        'posts': all_posts,
-        "title": "Posts"
-    }
-    return render(request, "post/posts.html", context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Home'
+        return context
 
 
-def post_detail(request, slug):
-    post = Post.objects.get(slug=slug)
-    context = {
-        'post': post,
-        'title': post.title
-    }
-    return render(request, "post/post_detail.html", context)
+class AboutView(View):
+    """Class-based view for about page."""
+
+    def get(self, request):
+        return render(request, 'post/about.html')
 
 
-@require_http_methods(["GET", "POST"])
-@login_required(login_url='account:login')
-def create_post(request):
-    """Create a new blog post."""
-    if request.method == 'POST':
+class PostsView(ListView):
+    """Class-based view for displaying all posts listing page."""
+    model = Post
+    template_name = 'post/posts.html'
+    context_object_name = 'posts'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Posts'
+        return context
+
+
+class PostDetailView(DetailView):
+    """Class-based view for displaying a single post detail."""
+    model = Post
+    template_name = 'post/post_detail.html'
+    context_object_name = 'post'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = self.object.title
+        return context
+
+
+class CreatePostView(LoginRequiredMixin, View):
+    """Class-based view for creating a new blog post."""
+    login_url = 'account:login'
+    template_name = 'post/create_post.html'
+
+    def get(self, request):
+        form = PostForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
@@ -55,23 +77,32 @@ def create_post(request):
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
-    else:
-        form = PostForm()
 
-    return render(request, 'post/create_post.html', {'form': form})
+        return render(request, self.template_name, {'form': form})
 
 
-@require_http_methods(["GET", "POST"])
-@login_required(login_url='account:login')
-def edit_post(request, slug):
-    """Edit an existing blog post."""
-    post = get_object_or_404(Post, slug=slug)
+class EditPostView(LoginRequiredMixin, View):
+    """Class-based view for editing an existing blog post."""
+    login_url = 'account:login'
+    template_name = 'post/edit_post.html'
 
-    if request.user != post.author:
-        messages.error(request, 'You can only edit your own posts.')
-        return redirect('post_detail', slug=post.slug)
+    def get(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
 
-    if request.method == 'POST':
+        if request.user != post.author:
+            messages.error(request, 'You can only edit your own posts.')
+            return redirect('post_detail', slug=post.slug)
+
+        form = PostForm(instance=post)
+        return render(request, self.template_name, {'form': form, 'post': post})
+
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+
+        if request.user != post.author:
+            messages.error(request, 'You can only edit your own posts.')
+            return redirect('post_detail', slug=post.slug)
+
         form = PostForm(request.POST, request.FILES, instance=post)
         if form.is_valid():
             form.save()
@@ -81,26 +112,31 @@ def edit_post(request, slug):
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
-    else:
-        form = PostForm(instance=post)
 
-    return render(request, 'post/edit_post.html', {'form': form, 'post': post})
+        return render(request, self.template_name, {'form': form, 'post': post})
 
 
-@require_http_methods(["GET", "POST"])
-@login_required(login_url='account:login')
-def delete_post(request, slug):
-    """Delete a blog post."""
-    post = get_object_or_404(Post, slug=slug)
+class DeletePostView(LoginRequiredMixin, View):
+    """Class-based view for deleting a blog post."""
+    login_url = 'account:login'
+    template_name = 'post/delete_post.html'
 
-    if request.user != post.author:
-        messages.error(request, 'You can only delete your own posts.')
-        return redirect('post_detail', slug=post.slug)
+    def get(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
 
-    if request.method == 'POST':
+        if request.user != post.author:
+            messages.error(request, 'You can only delete your own posts.')
+            return redirect('post_detail', slug=post.slug)
+
+        return render(request, self.template_name, {'post': post})
+
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+
+        if request.user != post.author:
+            messages.error(request, 'You can only delete your own posts.')
+            return redirect('post_detail', slug=post.slug)
+
         post.delete()
         messages.success(request, 'Post deleted successfully!')
         return redirect('index')
-
-    return render(request, 'post/delete_post.html', {'post': post})
-

@@ -1,93 +1,115 @@
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.db import IntegrityError
+from django.contrib.auth.views import LoginView as DjangoLoginView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
-from django.views.decorators.http import require_http_methods
+from django.urls import reverse_lazy
+from django.views import View
+from django.views.generic import DetailView
+from django.utils.decorators import method_decorator
 
 from .forms import RegisterForm, LoginForm, UserUpdateForm, ProfileUpdateForm
+from .models import Profile
 
 
-@require_http_methods(["GET", "POST"])
-def register(request):
-    """Handle user registration with form validation and error handling."""
-    if request.user.is_authenticated:
-        return redirect('index')
+class RegisterView(View):
+    """Class-based view for user registration."""
 
-    if request.method == 'POST':
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('index')
+        form = RegisterForm()
+        return render(request, 'account/register.html', {'form': form})
+
+    def post(self, request):
+        if request.user.is_authenticated:
+            return redirect('index')
+
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(
-                request,
-                'Account successfully created! Please log in.'
-            )
+            messages.success(request, 'Account successfully created! Please log in.')
             return redirect('account:login')
         else:
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
-    else:
-        form = RegisterForm()
 
-    return render(request, 'account/register.html', {'form': form})
+        return render(request, 'account/register.html', {'form': form})
 
 
-@require_http_methods(["GET", "POST"])
-def login_view(request):
-    """Handle user login with secure authentication."""
-    if request.user.is_authenticated:
-        return redirect('index')
+class LoginView(DjangoLoginView):
+    """Class-based view for user login using Django's built-in LoginView."""
+    form_class = LoginForm
+    template_name = 'account/login.html'
+    success_url = reverse_lazy('index')
 
-    if request.method == 'POST':
-        form = LoginForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            messages.success(request, f'Welcome back, {user.username}!')
+    def get_success_url(self):
+        next_url = self.request.GET.get('next')
+        if next_url:
+            return next_url
+        return super().get_success_url()
 
-            # Redirect to next page if provided, otherwise to index
-            next_url = request.GET.get('next', 'index')
-            return redirect(next_url)
-    else:
-        form = LoginForm()
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'Welcome back, {self.request.user.username}!')
+        return response
 
-    return render(request, 'account/login.html', {'form': form})
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('index')
+        return super().get(request, *args, **kwargs)
 
 
-@require_http_methods(["GET", "POST"])
-def logout_view(request):
-    """Handle user logout with confirmation."""
-    if not request.user.is_authenticated:
-        messages.warning(request, 'You are not logged in.')
-        return redirect('account:login')
+class LogoutView(View):
+    """Class-based view for user logout with confirmation."""
 
-    if request.method == 'POST':
+    @method_decorator(login_required(login_url='account:login'))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        return render(request, 'account/logout.html')
+
+    def post(self, request):
         user_username = request.user.username
         logout(request)
         messages.success(request, f'Goodbye {user_username}! You have been logged out.')
         return redirect('index')
 
-    # GET request - show logout confirmation page
-    return render(request, 'account/logout.html')
+
+class ProfileView(LoginRequiredMixin, DetailView):
+    """Class-based view for displaying user profile."""
+    model = Profile
+    template_name = 'account/profile.html'
+    context_object_name = 'profile'
+    login_url = 'account:login'
+
+    def get_object(self):
+        return self.request.user.profile
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
 
 
-@require_http_methods(["GET"])
-@login_required
-def profile(request):
-    """Display user profile information."""
-    if not request.user.is_authenticated:
-        messages.warning(request, 'You need to log in to view your profile.')
-        return redirect('account:login')
+class EditProfileView(LoginRequiredMixin, View):
+    """Class-based view for editing user profile."""
+    login_url = 'account:login'
+    template_name = 'account/edit_profile.html'
 
-    return render(request, 'account/profile.html', {'user': request.user})
+    def get(self, request):
+        user_form = UserUpdateForm(instance=request.user)
+        profile_form = ProfileUpdateForm(instance=request.user.profile)
+        context = {
+            'user_form': user_form,
+            'profile_form': profile_form
+        }
+        return render(request, self.template_name, context)
 
-
-@require_http_methods(["GET", "POST"])
-@login_required
-def edit_profile(request):
-    """Handle user profile editing with form validation."""
-    if request.method == 'POST':
+    def post(self, request):
         user_form = UserUpdateForm(request.POST, instance=request.user)
         profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
 
@@ -105,13 +127,9 @@ def edit_profile(request):
                 for field, errors in profile_form.errors.items():
                     for error in errors:
                         messages.error(request, f'{field}: {error}')
-    else:
-        user_form = UserUpdateForm(instance=request.user)
-        profile_form = ProfileUpdateForm(instance=request.user.profile)
 
-    context = {
-        'user_form': user_form,
-        'profile_form': profile_form
-    }
-    return render(request, 'account/edit_profile.html', context)
-
+        context = {
+            'user_form': user_form,
+            'profile_form': profile_form
+        }
+        return render(request, self.template_name, context)
