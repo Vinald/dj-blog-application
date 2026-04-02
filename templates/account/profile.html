@@ -8,7 +8,7 @@
             <!-- Profile Card -->
             <div class="card shadow-lg mb-4">
                 <div class="card-header">
-                    <h3 class="mb-0">👤 User Profile</h3>
+                    <h3 class="mb-0">User Profile</h3>
                 </div>
                 <div class="card-body p-4">
                     <!-- Profile Picture and Basic Info -->
@@ -76,7 +76,10 @@
 
                     <!-- Action Buttons -->
                     <div class="d-flex gap-2 justify-content-center flex-wrap">
-                        <a href="{% url 'index' %}" class="btn btn-primary">
+                        <a href="{% url 'account:edit_profile' %}" class="btn btn-primary">
+                            Edit Profile
+                        </a>
+                        <a href="{% url 'index' %}" class="btn btn-secondary">
                             ← Back to Home
                         </a>
                         <a href="{% url 'account:logout' %}" class="btn btn-outline-danger">

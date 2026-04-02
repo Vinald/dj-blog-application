@@ -5,7 +5,7 @@ from django.db import IntegrityError
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 
-from .forms import RegisterForm, LoginForm
+from .forms import RegisterForm, LoginForm, UserUpdateForm, ProfileUpdateForm
 
 
 @require_http_methods(["GET", "POST"])
@@ -81,3 +81,37 @@ def profile(request):
         return redirect('account:login')
 
     return render(request, 'account/profile.html', {'user': request.user})
+
+
+@require_http_methods(["GET", "POST"])
+@login_required
+def edit_profile(request):
+    """Handle user profile editing with form validation."""
+    if request.method == 'POST':
+        user_form = UserUpdateForm(request.POST, instance=request.user)
+        profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Your profile has been updated successfully!')
+            return redirect('account:profile')
+        else:
+            if user_form.errors:
+                for field, errors in user_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f'{field}: {error}')
+            if profile_form.errors:
+                for field, errors in profile_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f'{field}: {error}')
+    else:
+        user_form = UserUpdateForm(instance=request.user)
+        profile_form = ProfileUpdateForm(instance=request.user.profile)
+
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form
+    }
+    return render(request, 'account/edit_profile.html', context)
+
