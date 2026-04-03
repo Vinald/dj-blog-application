@@ -6,9 +6,9 @@
         <h1 class="card-title mb-3">{{ post.title }}</h1>
 
         <div class="article-metadata mb-4 pb-3">
-            <strong class="text-dark">✍️ By <a href="{% url 'user_posts' post.author.username %}" class="text-decoration-none text-dark fw-bold">{{ post.author }}</a></strong>
+            <strong class="text-dark">By <a href="{% url 'user_posts' post.author.username %}" class="text-decoration-none text-dark fw-bold">{{ post.author }}</a></strong>
             &nbsp;·&nbsp;
-            <time datetime="{{ post.created_at|date:'c' }}" class="text-muted">📅 {{ post.created_at|date:"F d, Y" }}</time>
+            <time datetime="{{ post.created_at|date:'c' }}" class="text-muted">{{ post.created_at|date:"F d, Y" }}</time>
         </div>
 
         <div class="article-content lh-lg mb-4">
