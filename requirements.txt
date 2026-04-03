@@ -1,5 +1,6 @@
 asgiref==3.11.1
 Django==6.0.3
+dj-database-url==2.1.0
 django-crispy-forms==2.6
 django-widget-tweaks==1.5.1
 pillow==12.1.1

@@ -220,45 +220,77 @@ gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 4
 ### Quick Start with Docker
 
 ```bash
+# Make script executable
 chmod +x docker.sh
 
-# Start application
+# Start application (pulls images, builds, migrates, and starts services)
 ./docker.sh up
 
-# Stop application
-./docker.sh down
+# The application will be available at http://localhost:8000
+# Create superuser when prompted
 
 # View logs
 ./docker.sh logs
 
-# Run migrations
-./docker.sh migrate
-
-# Access shell
-./docker.sh shell
-
-# Run bash
-./docker.sh bash
+# Stop application
+./docker.sh down
 ```
 
-### Docker Commands Reference
+### Available Docker Commands
 
-| Command | Description |
-|---------|-------------|
-| `./docker.sh up` | Start containers and run migrations |
-| `./docker.sh down` | Stop all containers |
-| `./docker.sh logs` | View container logs |
-| `./docker.sh test` | Run tests |
-| `./docker.sh shell` | Django shell |
-| `./docker.sh bash` | Container bash shell |
-| `./docker.sh migrate` | Run migrations |
-| `./docker.sh makemigrations` | Create migrations |
-| `./docker.sh static` | Collect static files |
+```bash
+./docker.sh up              # Start containers and run migrations
+./docker.sh down            # Stop all containers
+./docker.sh logs            # View container logs in real-time
+./docker.sh test            # Run test suite
+./docker.sh shell           # Access Django shell
+./docker.sh bash            # Access container bash
+./docker.sh migrate         # Run migrations
+./docker.sh makemigrations  # Create new migrations
+./docker.sh static          # Collect static files
+```
 
 ### Docker Services
 
-- **web**: Django application (port 8000)
-- **db**: PostgreSQL database (port 5432)
+| Service | Port | Details |
+|---------|------|---------|
+| web | 8000 | Django development server |
+| db | 5432 | PostgreSQL 15 database |
+
+### Database
+
+- PostgreSQL 15
+- Database: blog_db
+- User: blog_user
+- Password: blog_password (change in production!)
+
+### Troubleshooting
+
+**Port already in use:**
+```bash
+# Stop existing containers
+./docker.sh down
+
+# Or use different port (edit docker-compose.yml)
+ports:
+  - "8001:8000"  # Use 8001 instead
+```
+
+**Database connection error:**
+```bash
+# Ensure db service is healthy
+docker-compose ps
+
+# Check logs
+./docker.sh logs
+```
+
+**Clean rebuild:**
+```bash
+./docker.sh down
+docker-compose build --no-cache
+./docker.sh up
+```
 
 ## Testing
 
@@ -301,7 +333,59 @@ python manage.py check
 
 MIT License - see LICENSE file for details
 
-## Implementation Summary
+docker-compose up --build## Docker Setup - Fixed Issues
+
+### Issues Found and Fixed
+
+#### 1. docker-compose.yml - Obsolete Version Attribute
+**Problem:** The `version: '3.8'` line is obsolete in newer Docker Compose
+**Solution:** Removed the version attribute
+**Status:** ✓ FIXED
+
+#### 2. psycopg2-binary Build Issues on Python 3.14
+**Problem:** psycopg2-binary failed to compile on Python 3.14 ARM64
+**Error:** Implicit function declaration and compilation errors
+**Solution:** Replaced with psycopg3 which has native Python 3.14 support
+**Status:** ✓ FIXED
+
+### Docker Configuration Updates
+
+**Dockerfile:**
+- Removed libpq-dev (not needed with psycopg3 binary wheels)
+- Simplified system dependencies
+- Reduced build size
+
+**requirements.txt:**
+- Changed: `psycopg2-binary==2.9.9` → `psycopg[binary]==3.1.17`
+- Added: `dj-database-url==2.1.0` for DATABASE_URL parsing
+
+**settings.py:**
+- Added automatic PostgreSQL detection via DATABASE_URL
+- Falls back to SQLite if DATABASE_URL not set
+- Supports both local and Docker environments seamlessly
+
+### How to Use
+
+**Local Development (SQLite):**
+```bash
+python manage.py runserver
+```
+
+**Docker (PostgreSQL):**
+```bash
+chmod +x docker.sh
+./docker.sh up
+```
+
+### Environment Variables
+
+```
+DATABASE_URL=postgresql://blog_user:blog_password@db:5432/blog_db
+```
+
+When set, automatically configures PostgreSQL. Otherwise uses SQLite.
+
+All Docker issues are now fixed and fully compatible with Python 3.14!
 
 ### New Features Added
 

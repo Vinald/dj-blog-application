@@ -88,6 +88,16 @@ DATABASES = {
     }
 }
 
+# Support PostgreSQL via DATABASE_URL environment variable
+import dj_database_url
+db_url = os.getenv('DATABASE_URL')
+if db_url:
+    DATABASES['default'] = dj_database_url.config(
+        default=db_url,
+        conn_max_age=600,
+        engine='django.db.backends.postgresql',
+    )
+
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
