@@ -1,13 +1,42 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="mb-4 d-flex justify-content-between align-items-center">
-    <h2 class="mb-0">Latest Posts</h2>
-    {% if user.is_authenticated %}
-    <a href="{% url 'create_post' %}" class="btn btn-primary">New Post</a>
-    {% endif %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-2">Posts by <strong>{{ author.get_full_name|default:author.username }}</strong></h2>
+            <p class="text-muted">{{ page_obj.paginator.count }} post{{ page_obj.paginator.count|pluralize }} published</p>
+        </div>
+        {% if user.username == author.username %}
+        <a href="{% url 'create_post' %}" class="btn btn-primary">New Post</a>
+        {% endif %}
+    </div>
+
+    <!-- Author Info Card -->
+    <div class="card border-0 bg-light mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center">
+                <img src="{{ author.profile.image.url }}"
+                     alt="{{ author.username }}"
+                     class="rounded-circle me-3"
+                     style="width: 80px; height: 80px; object-fit: cover;"
+                     onerror="this.src='/media/profile_pics/default.jpg'">
+                <div>
+                    <h5 class="mb-1">{{ author.get_full_name|default:author.username }}</h5>
+                    <p class="text-muted mb-2">@{{ author.username }}</p>
+                    {% if author.profile.bio %}
+                    <p class="mb-0">{{ author.profile.bio }}</p>
+                    {% endif %}
+                    <div class="mt-2">
+                        <a href="{% url 'account:profile' %}" class="btn btn-sm btn-outline-primary">View Profile</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+<!-- Posts List -->
 {% for post in posts %}
 <article class="card mb-4 border-0">
     <div class="card-body">
@@ -15,7 +44,7 @@
             <div>
                 <a href="{{ post.get_absolute_url }}" class="h5 article-title">{{ post.title }}</a>
                 <div class="text-muted small article-metadata">
-                    <a href="{% url 'user_posts' post.author.username %}" class="text-decoration-none text-muted fw-bold">{{ post.author }}</a>
+                    <strong>{{ post.author }}</strong>
                     &nbsp;·&nbsp;
                     <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"M d, Y" }}</time>
                 </div>
@@ -46,9 +75,9 @@
 {% empty %}
 <div class="alert alert-info text-center py-5">
     <h5>No Posts Yet</h5>
-    <p class="text-muted">There are no blog posts available at the moment. Please check back soon!</p>
-    {% if user.is_authenticated %}
-    <a href="{% url 'create_post' %}" class="btn btn-primary mt-3">Create the First Post</a>
+    <p class="text-muted">{{ author.get_full_name|default:author.username }} hasn't published any posts yet.</p>
+    {% if user.username == author.username %}
+    <a href="{% url 'create_post' %}" class="btn btn-primary mt-3">📝 Create Your First Post</a>
     {% endif %}
 </div>
 {% endfor %}
@@ -103,4 +132,9 @@
     <small>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</small>
 </div>
 {% endif %}
+
+<div class="mt-4">
+    <a href="{% url 'index' %}" class="btn btn-outline-secondary">← Back to Home</a>
+</div>
 {% endblock content %}
+

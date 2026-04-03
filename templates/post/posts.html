@@ -18,7 +18,7 @@
             <div>
                 <a href="{{ post.get_absolute_url }}" class="h5 article-title">{{ post.title }}</a>
                 <div class="text-muted small article-metadata">
-                    <strong>{{ post.author }}</strong>
+                    <a href="{% url 'user_posts' post.author.username %}" class="text-decoration-none text-muted fw-bold">{{ post.author }}</a>
                     &nbsp;·&nbsp;
                     <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"M d, Y" }}</time>
                 </div>
@@ -62,8 +62,7 @@
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
         <li class="page-item">
-            <a class="page-link" href="?page=1" aria-label="First">
-                <span aria-hidden="true">&laquo;&laquo;</span> First
+            <a class="page-link" href="?page=1" aria-label="First"><span aria-hidden="true">&laquo;</span> First
             </a>
         </li>
         <li class="page-item">
@@ -78,7 +77,6 @@
             <li class="page-item active">
                 <span class="page-link">
                     {{ num }}
-                    <span class="sr-only">(current)</span>
                 </span>
             </li>
             {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
@@ -96,7 +94,7 @@
         </li>
         <li class="page-item">
             <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                Last <span aria-hidden="true">&raquo;&raquo;</span>
+                Last <span aria-hidden="true">&raquo;</span>
             </a>
         </li>
         {% endif %}

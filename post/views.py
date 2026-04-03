@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView
 
@@ -39,6 +39,24 @@ class PostsView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Posts'
+        return context
+
+
+class UserPostsView(ListView):
+    """Class-based view for displaying posts by a specific user."""
+    model = Post
+    template_name = 'post/user_posts.html'
+    context_object_name = 'posts'
+    paginate_by = 10
+
+    def get_queryset(self):
+        self.user = get_object_or_404(User, username=self.kwargs['username'])
+        return Post.objects.filter(author=self.user).order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['author'] = self.user
+        context['title'] = f"Posts by {self.user.get_full_name or self.user.username}"
         return context
 
 

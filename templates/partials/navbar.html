@@ -21,7 +21,8 @@
             <div class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
                 <a class="nav-item nav-link" href="{% url 'create_post' %}">New Post</a>
-                <a class="nav-item nav-link text-primary" href="{% url 'account:profile' %}"><strong>{{ user.username|title }}</strong></a>
+                <a class="nav-item nav-link" href="{% url 'user_posts' user.username %}">My Posts</a>
+                <a class="nav-item nav-link text-primary" href="{% url 'account:profile' %}">👤 <strong>{{ user.username|upper }}</strong></a>
                 <a class="nav-item nav-link" href="{% url 'account:logout' %}">Logout</a>
                 {% else %}
                 <a class="nav-item nav-link" href="{% url 'account:login' %}">Login</a>
