@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-danger text-white">
+                    <h1 class="mb-0">Server Error</h1>
+                </div>
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <h2 class="display-1 fw-bold text-danger">500</h2>
+                        <p class="lead text-muted mb-4">
+                            Something went wrong on our end. We're sorry for the inconvenience.
+                        </p>
+                    </div>
+
+                    <p class="text-muted mb-4">
+                        A server error has occurred. Our team has been notified and is working on a fix.
+                    </p>
+
+                    <p class="text-muted mb-4">
+                        In the meantime, try:
+                    </p>
+                    <ul class="list-unstyled text-muted mb-4">
+                        <li>Refreshing the page</li>
+                        <li>Clearing your browser cache</li>
+                        <li>Coming back in a few moments</li>
+                    </ul>
+
+                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <a href="{% url 'index' %}" class="btn btn-primary btn-lg">
+                            Back to Home
+                        </a>
+                        <a href="{% url 'posts' %}" class="btn btn-secondary btn-lg">
+                            View Posts
+                        </a>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <p class="text-muted small">
+                        If the problem persists, please <a href="{% url 'about' %}" class="text-decoration-none fw-bold">contact us</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
