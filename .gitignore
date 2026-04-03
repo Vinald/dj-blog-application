@@ -140,16 +140,14 @@ terraform.tfstate
 *.p12
 *.cer
 *.der
-
-# Environment variables - NEVER commit sensitive configs!
+# Environment variables - NEVER commit with real credentials!
+# Keep .env.example in git for reference
 .env
 .env.local
 .env.production
 .env.staging
 .env.*.local
 !.env.example
-!.env.local.example
-!.env.production.example
 
 # Celery beat schedule
 celerybeat-schedule
