@@ -94,12 +94,6 @@ PASSWORD_RESET_TIMEOUT=3600
 | `DEFAULT_FROM_EMAIL` | Sender email address |
 | `PASSWORD_RESET_TIMEOUT` | Reset link validity in seconds (3600 = 1 hour) |
 
-### Email Providers
-
-**Gmail:** Generate App Password at https://myaccount.google.com/apppasswords
-
-**SendGrid, AWS SES, Mailgun:** Use their SMTP credentials
-
 ### Security
 
 - **Never commit `.env` file** - Only `.env.example` should be in git
@@ -313,156 +307,6 @@ pytest --cov=. --cov-report=html
 - `post/tests_models.py` - Post model tests
 - `post/tests_views.py` - Post view tests
 
-### Test Coverage
-
-Tests cover:
-- User registration and login
-- Post creation, editing, deletion
-- Password reset functionality
-- Permission checks
-- View responses and redirects
-
-## Verification
-
-```bash
-python manage.py check
-```
-
-
-## License
-
-MIT License - see LICENSE file for details
-
-docker-compose up --build## Docker Setup - Fixed Issues
-
-### Issues Found and Fixed
-
-#### 1. docker-compose.yml - Obsolete Version Attribute
-**Problem:** The `version: '3.8'` line is obsolete in newer Docker Compose
-**Solution:** Removed the version attribute
-**Status:** ✓ FIXED
-
-#### 2. psycopg2-binary Build Issues on Python 3.14
-**Problem:** psycopg2-binary failed to compile on Python 3.14 ARM64
-**Error:** Implicit function declaration and compilation errors
-**Solution:** Replaced with psycopg3 which has native Python 3.14 support
-**Status:** ✓ FIXED
-
-### Docker Configuration Updates
-
-**Dockerfile:**
-- Removed libpq-dev (not needed with psycopg3 binary wheels)
-- Simplified system dependencies
-- Reduced build size
-
-**requirements.txt:**
-- Changed: `psycopg2-binary==2.9.9` → `psycopg[binary]==3.1.17`
-- Added: `dj-database-url==2.1.0` for DATABASE_URL parsing
-
-**settings.py:**
-- Added automatic PostgreSQL detection via DATABASE_URL
-- Falls back to SQLite if DATABASE_URL not set
-- Supports both local and Docker environments seamlessly
-
-### How to Use
-
-**Local Development (SQLite):**
-```bash
-python manage.py runserver
-```
-
-**Docker (PostgreSQL):**
-```bash
-chmod +x docker.sh
-./docker.sh up
-```
-
-### Environment Variables
-
-```
-DATABASE_URL=postgresql://blog_user:blog_password@db:5432/blog_db
-```
-
-When set, automatically configures PostgreSQL. Otherwise uses SQLite.
-
-All Docker issues are now fixed and fully compatible with Python 3.14!
-
-### New Features Added
-
-1. **Comprehensive Testing Suite**
-   - 23 unit tests covering authentication, models, and views
-   - Test coverage for user registration, login, and password reset
-   - Post CRUD operation tests
-   - Permission and authorization tests
-   - All tests passing
-
-2. **Docker Support**
-   - Dockerfile for containerized application
-   - docker-compose.yml with PostgreSQL and Django services
-   - docker.sh helper script for common operations
-   - .dockerignore for optimized builds
-
-3. **Production Ready**
-   - Gunicorn WSGI server
-   - PostgreSQL database support
-   - Environment-based configuration
-   - Static file collection support
-
-4. **Development Tools**
-   - pytest and pytest-django for testing
-   - Coverage reporting
-   - pytest.ini configuration
-
-### Files Created
-
-```
-Dockerfile                    # Container configuration
-docker-compose.yml           # Multi-container setup
-docker.sh                    # Helper script
-.dockerignore               # Docker ignore file
-pytest.ini                  # Test configuration
-.env.docker                 # Docker environment example
-post/tests_models.py        # Post model tests
-post/tests_views.py         # Post view tests
-```
-
-### Files Updated
-
-```
-requirements.txt            # Added testing and production packages
-README.md                   # Added Docker and testing documentation
-account/tests.py            # Added authentication tests
-settings.py                 # Environment variable support
-```
-
-### Test Coverage
-
-- Authentication (8 tests)
-  - Registration page
-  - Login page
-  - User registration
-  - User login
-  - User logout
-  - Profile access
-  - Password reset page
-  - Invalid login handling
-
-- Post Models (4 tests)
-  - Post creation
-  - String representation
-  - Ordering
-  - Absolute URL
-
-- Post Views (11 tests)
-  - Index view
-  - Post detail view
-  - Posts list view
-  - User posts view
-  - Create post authentication
-  - Create post form submission
-  - Edit post authorization
-  - Delete post functionality
-
 ### Quick Commands
 
 **Development:**
@@ -487,22 +331,13 @@ docker build -t blog-app .
 docker run -p 8000:8000 blog-app
 ```
 
-### Technology Stack
-
-- Django 6.0.3
-- PostgreSQL 15 (Docker)
-- Bootstrap 5
-- Gunicorn
-- Python 3.14
-
 ### Next Steps
 
 1. Deploy to production server
-2. Configure real SMTP provider (Gmail, SendGrid, etc.)
-3. Set up CI/CD pipeline
-4. Configure SSL/TLS
-5. Add monitoring and logging
+2. Set up CI/CD pipeline
+3. Configure SSL/TLS
+4. Add monitoring and logging
 
-All tests passing and ready for deployment!
+## License
 
-
+MIT License - see LICENSE file for details
