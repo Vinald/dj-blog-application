@@ -12,6 +12,10 @@ A modern, feature-rich Django blog application with user authentication, post ma
 - Pagination for blog posts
 - Responsive Bootstrap UI
 - Custom error pages (403, 404, 500)
+- Comprehensive test coverage
+- Docker and Docker Compose support
+- PostgreSQL database support
+- Environment-based configuration
 
 ## Installation
 
@@ -19,8 +23,9 @@ A modern, feature-rich Django blog application with user authentication, post ma
 
 - Python 3.8 or higher
 - pip (Python package manager)
+- Docker (optional, for containerized setup)
 
-### Quick Start
+### Quick Start (Local Development)
 
 1. Clone the repository
 2. Create virtual environment: `python -m venv .venv`
@@ -32,6 +37,15 @@ A modern, feature-rich Django blog application with user authentication, post ma
 8. Run server: `python manage.py runserver`
 
 Access application at: http://localhost:8000
+
+### Quick Start (Docker)
+
+1. Ensure Docker and Docker Compose are installed
+2. Make script executable: `chmod +x docker.sh`
+3. Start application: `./docker.sh up`
+4. Create superuser when prompted
+5. Access application at: http://localhost:8000
+6. Stop application: `./docker.sh down`
 
 ## Environment Configuration
 
@@ -196,6 +210,86 @@ python manage.py runserver
 gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 4
 ```
 
+## Docker Setup
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Quick Start with Docker
+
+```bash
+chmod +x docker.sh
+
+# Start application
+./docker.sh up
+
+# Stop application
+./docker.sh down
+
+# View logs
+./docker.sh logs
+
+# Run migrations
+./docker.sh migrate
+
+# Access shell
+./docker.sh shell
+
+# Run bash
+./docker.sh bash
+```
+
+### Docker Commands Reference
+
+| Command | Description |
+|---------|-------------|
+| `./docker.sh up` | Start containers and run migrations |
+| `./docker.sh down` | Stop all containers |
+| `./docker.sh logs` | View container logs |
+| `./docker.sh test` | Run tests |
+| `./docker.sh shell` | Django shell |
+| `./docker.sh bash` | Container bash shell |
+| `./docker.sh migrate` | Run migrations |
+| `./docker.sh makemigrations` | Create migrations |
+| `./docker.sh static` | Collect static files |
+
+### Docker Services
+
+- **web**: Django application (port 8000)
+- **db**: PostgreSQL database (port 5432)
+
+## Testing
+
+### Run Tests
+
+```bash
+# Django tests
+python manage.py test
+
+# Pytest
+pytest
+
+# Coverage report
+pytest --cov=. --cov-report=html
+```
+
+### Test Files
+
+- `account/tests.py` - Authentication tests
+- `post/tests_models.py` - Post model tests
+- `post/tests_views.py` - Post view tests
+
+### Test Coverage
+
+Tests cover:
+- User registration and login
+- Post creation, editing, deletion
+- Password reset functionality
+- Permission checks
+- View responses and redirects
+
 ## Verification
 
 ```bash
@@ -206,3 +300,125 @@ python manage.py check
 ## License
 
 MIT License - see LICENSE file for details
+
+## Implementation Summary
+
+### New Features Added
+
+1. **Comprehensive Testing Suite**
+   - 23 unit tests covering authentication, models, and views
+   - Test coverage for user registration, login, and password reset
+   - Post CRUD operation tests
+   - Permission and authorization tests
+   - All tests passing
+
+2. **Docker Support**
+   - Dockerfile for containerized application
+   - docker-compose.yml with PostgreSQL and Django services
+   - docker.sh helper script for common operations
+   - .dockerignore for optimized builds
+
+3. **Production Ready**
+   - Gunicorn WSGI server
+   - PostgreSQL database support
+   - Environment-based configuration
+   - Static file collection support
+
+4. **Development Tools**
+   - pytest and pytest-django for testing
+   - Coverage reporting
+   - pytest.ini configuration
+
+### Files Created
+
+```
+Dockerfile                    # Container configuration
+docker-compose.yml           # Multi-container setup
+docker.sh                    # Helper script
+.dockerignore               # Docker ignore file
+pytest.ini                  # Test configuration
+.env.docker                 # Docker environment example
+post/tests_models.py        # Post model tests
+post/tests_views.py         # Post view tests
+```
+
+### Files Updated
+
+```
+requirements.txt            # Added testing and production packages
+README.md                   # Added Docker and testing documentation
+account/tests.py            # Added authentication tests
+settings.py                 # Environment variable support
+```
+
+### Test Coverage
+
+- Authentication (8 tests)
+  - Registration page
+  - Login page
+  - User registration
+  - User login
+  - User logout
+  - Profile access
+  - Password reset page
+  - Invalid login handling
+
+- Post Models (4 tests)
+  - Post creation
+  - String representation
+  - Ordering
+  - Absolute URL
+
+- Post Views (11 tests)
+  - Index view
+  - Post detail view
+  - Posts list view
+  - User posts view
+  - Create post authentication
+  - Create post form submission
+  - Edit post authorization
+  - Delete post functionality
+
+### Quick Commands
+
+**Development:**
+```bash
+python manage.py runserver
+python manage.py test
+pytest
+```
+
+**Docker:**
+```bash
+chmod +x docker.sh
+./docker.sh up           # Start containers
+./docker.sh down         # Stop containers
+./docker.sh test         # Run tests
+./docker.sh logs         # View logs
+```
+
+**Production:**
+```bash
+docker build -t blog-app .
+docker run -p 8000:8000 blog-app
+```
+
+### Technology Stack
+
+- Django 6.0.3
+- PostgreSQL 15 (Docker)
+- Bootstrap 5
+- Gunicorn
+- Python 3.14
+
+### Next Steps
+
+1. Deploy to production server
+2. Configure real SMTP provider (Gmail, SendGrid, etc.)
+3. Set up CI/CD pipeline
+4. Configure SSL/TLS
+5. Add monitoring and logging
+
+All tests passing and ready for deployment!
+
+
