@@ -144,6 +144,7 @@ terraform.tfstate
 # Keep .env.example in git for reference
 .env
 .env.local
+.env.docker
 .env.production
 .env.staging
 .env.*.local
