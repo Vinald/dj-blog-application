@@ -5,8 +5,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.views.generic import ListView, DetailView
 
-from .models import Post
-from .forms import PostForm
+from .models import Post, Comment
+from .forms import PostForm, CommentForm
 
 
 class IndexView(ListView):
@@ -71,6 +71,8 @@ class PostDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = self.object.title
+        context['comments'] = self.object.comments.all()
+        context['comment_form'] = CommentForm()
         return context
 
 
@@ -158,3 +160,42 @@ class DeletePostView(LoginRequiredMixin, View):
         post.delete()
         messages.success(request, 'Post deleted successfully!')
         return redirect('index')
+
+
+class CreateCommentView(LoginRequiredMixin, View):
+    """Class-based view for creating a comment on a post."""
+    login_url = 'account:login'
+
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        form = CommentForm(request.POST)
+
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.author = request.user
+            comment.save()
+            messages.success(request, 'Comment posted successfully!')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{error}')
+
+        return redirect('post_detail', slug=post.slug)
+
+
+class DeleteCommentView(LoginRequiredMixin, View):
+    """Class-based view for deleting a comment."""
+    login_url = 'account:login'
+
+    def post(self, request, slug, comment_id):
+        post = get_object_or_404(Post, slug=slug)
+        comment = get_object_or_404(Comment, id=comment_id, post=post)
+
+        if request.user != comment.author and request.user != post.author:
+            messages.error(request, 'You can only delete your own comments.')
+            return redirect('post_detail', slug=post.slug)
+
+        comment.delete()
+        messages.success(request, 'Comment deleted successfully!')
+        return redirect('post_detail', slug=post.slug)

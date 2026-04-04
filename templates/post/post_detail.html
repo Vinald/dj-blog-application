@@ -1,14 +1,28 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 
 {% block content %}
 <article class="card shadow-lg border-0 mb-4">
+    {% if post.image %}
+    <div class="position-relative">
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="card-img-top"
+             style="max-height: 400px; object-fit: cover;">
+    </div>
+    {% endif %}
+
     <div class="card-body p-5">
         <h1 class="card-title mb-3">{{ post.title }}</h1>
 
-        <div class="article-metadata mb-4 pb-3">
-            <strong class="text-dark">By <a href="{% url 'user_posts' post.author.username %}" class="text-decoration-none text-dark fw-bold">{{ post.author }}</a></strong>
+        <div class="article-metadata mb-4 pb-3 border-bottom">
+            <strong class="text-dark">By <a href="{% url 'user_posts' post.author.username %}"
+                                            class="text-decoration-none text-dark fw-bold">{{ post.author
+                }}</a></strong>
             &nbsp;·&nbsp;
-            <time datetime="{{ post.created_at|date:'c' }}" class="text-muted">{{ post.created_at|date:"F d, Y" }}</time>
+            <time datetime="{{ post.created_at|date:'c' }}" class="text-muted">{{ post.created_at|date:"F d, Y" }}
+            </time>
+            {% if post.updated_at != post.created_at %}
+            <br><small class="text-muted">Updated {{ post.updated_at|date:"F d, Y" }}</small>
+            {% endif %}
         </div>
 
         <div class="article-content lh-lg mb-4">
@@ -19,7 +33,7 @@
         <div class="mt-4 pt-3 border-top">
             <strong>Tags:</strong>
             {% for tag in post.tags.all %}
-            <span class="badge bg-secondary me-2 mt-2">{{ tag.name }}</span>
+            <span class="badge bg-secondary me-2 mt-2">{{ tag.title }}</span>
             {% endfor %}
         </div>
         {% endif %}
@@ -50,7 +64,75 @@
     </div>
 </div>
 
-<div class="mt-4">
+<!-- Comments Section -->
+<div class="mt-5">
+    <h3 class="mb-4">Comments ({{ comments.count }})</h3>
+
+    {% if user.is_authenticated %}
+    <div class="card mb-4 border-0 bg-light">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Leave a Comment</h5>
+            <form method="post" action="{% url 'create_comment' post.slug %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="{{ comment_form.content.id_for_label }}" class="form-label">{{
+                        comment_form.content.label }}</label>
+                    {% if comment_form.content.errors %}
+                    {{ comment_form.content|add_class:"form-control is-invalid" }}
+                    <div class="invalid-feedback d-block mt-2">
+                        {% for error in comment_form.content.errors %}
+                        <small>{{ error }}</small><br>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    {{ comment_form.content|add_class:"form-control" }}
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info mb-4">
+        <a href="{% url 'account:login' %}?next={{ request.path }}" class="alert-link">Login</a> to post a comment.
+    </div>
+    {% endif %}
+
+    <!-- Display Comments -->
+    {% if comments %}
+    <div class="comments-list">
+        {% for comment in comments %}
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <strong class="text-dark">{{ comment.author.get_full_name|default:comment.author.username
+                            }}</strong>
+                        <small class="text-muted d-block">{{ comment.created_at|date:"F d, Y \a\t H:i" }}</small>
+                    </div>
+                    {% if user.is_authenticated and user == comment.author or user == post.author %}
+                    <form method="post" action="{% url 'delete_comment' post.slug comment.id %}"
+                          style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Delete this comment?')">Delete
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                <p class="card-text mt-2">{{ comment.content }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-secondary">
+        No comments yet. Be the first to comment!
+    </div>
+    {% endif %}
+</div>
+
+<div class="mt-5">
     <a href="{% url 'index' %}" class="btn btn-outline-secondary">← Back to Posts</a>
 </div>
 {% endblock content %}

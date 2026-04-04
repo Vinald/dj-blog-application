@@ -65,6 +65,47 @@
                         {% endif %}
                     </div>
 
+                    <div class="mb-4">
+                        <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
+                        {% if post.image %}
+                        <div class="mb-2">
+                            <img src="{{ post.image.url }}" alt="{{ post.title }}"
+                                 style="max-width: 200px; max-height: 200px;">
+                            <p class="text-muted small mt-2">Current image</p>
+                        </div>
+                        {% endif %}
+                        {% if form.image.errors %}
+                        {{ form.image|add_class:"form-control is-invalid" }}
+                        <div class="invalid-feedback d-block mt-2">
+                            {% for error in form.image.errors %}
+                            <small>{{ error }}</small><br>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        {{ form.image|add_class:"form-control" }}
+                        {% endif %}
+                        <small class="text-muted d-block mt-2">Optional: Replace the featured image</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.tags.id_for_label }}" class="form-label">{{ form.tags.label }}</label>
+                        {% if form.tags.errors %}
+                        <div class="invalid-feedback d-block mt-2">
+                            {% for error in form.tags.errors %}
+                            <small>{{ error }}</small><br>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="border rounded p-3 mt-2">
+                            {% for widget in form.tags %}
+                            <div class="form-check mb-2">
+                                {{ widget }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted d-block mt-2">Optional: Select tags to categorize your post</small>
+                    </div>
+
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary py-2 px-4 fw-bold">Update Post</button>
                         <a href="{{ post.get_absolute_url }}" class="btn btn-secondary py-2 px-4 fw-bold">Cancel</a>
