@@ -71,8 +71,13 @@
 
                 <p class="card-text text-muted mb-3 lh-lg">{{ post.content|truncatechars:220 }}</p>
 
-                <div class="d-flex justify-content-between align-items-center">
-                    <a href="{{ post.get_absolute_url }}" class="btn btn-sm btn-primary">Read More →</a>
+                <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                    <div class="d-flex gap-2">
+                        <a href="{{ post.get_absolute_url }}" class="btn btn-sm btn-primary">Read More →</a>
+                        <a href="{{ post.get_absolute_url }}#comments" class="btn btn-sm btn-info">
+                            Comments ({{ post.comments.count }})
+                        </a>
+                    </div>
                     {% if post.tags.all %}
                     <div>
                         {% for tag in post.tags.all %}
@@ -86,21 +91,6 @@
         </div>
     </div>
         {% endif %}
-</article>
-
-        <p class="card-text text-muted mb-3 lh-lg">{{ post.content|truncatechars:220 }}</p>
-
-        <div class="d-flex justify-content-between align-items-center">
-            <a href="{{ post.get_absolute_url }}" class="btn btn-sm btn-primary">Read More →</a>
-            {% if post.tags.all %}
-            <div>
-                {% for tag in post.tags.all %}
-                <span class="badge bg-secondary me-1">{{ tag.name }}</span>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
-    </div>
 </article>
 {% empty %}
 <div class="alert alert-info text-center py-5">
@@ -167,4 +157,3 @@
     <a href="{% url 'index' %}" class="btn btn-outline-secondary">← Back to Home</a>
 </div>
 {% endblock content %}
-
