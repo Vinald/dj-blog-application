@@ -3,7 +3,7 @@
 A modern, feature-rich Django blog application with user authentication, post management, images, tags, comments, and
 password reset functionality.
 
-## ✨ Features
+## Features
 
 ### Core Features
 
@@ -20,11 +20,11 @@ password reset functionality.
 - PostgreSQL database support
 - Environment-based configuration
 
-### 🆕 Enhanced Features (April 2026)
+### Enhanced Features (April 2026)
 
-- **📸 Featured Images** - Upload and display post images
-- **🏷️ Tags** - Organize posts with multiple tags
-- **💬 Comments** - Full comment system with moderation
+- **Featured Images** - Upload and display post images
+- **Tags** - Organize posts with multiple tags
+- **Comments** - Full comment system with moderation
 
 ## Installation
 
@@ -162,7 +162,7 @@ PASSWORD_RESET_TIMEOUT=3600
 - View post count per tag
 - Tags display on post detail and listings
 
-### 💬 Comments
+### Comments
 
 **Posting Comments:**
 
@@ -244,7 +244,7 @@ Creates demo user (username: demo, password: demo123) with 50 sample posts.
 
 ## New Features Documentation (April 2026)
 
-### 📸 Images Feature
+### Images Feature
 
 **Backend:**
 
@@ -265,7 +265,7 @@ Creates demo user (username: demo, password: demo123) with 50 sample posts.
 - See image in post list view
 - Can replace image when editing posts
 
-### 🏷️ Tags Feature
+### Tags Feature
 
 **Backend:**
 
@@ -499,6 +499,56 @@ chmod +x docker.sh
 ./docker.sh down         # Stop containers
 ./docker.sh test         # Run tests
 ./docker.sh logs         # View logs
+```
+
+### Docker Troubleshooting
+
+**Port already in use:**
+
+```bash
+# Stop existing containers
+./docker.sh down
+
+# Or use different port (edit docker-compose.yml)
+ports:
+  - "8001:8000"  # Use 8001 instead
+```
+
+**Database connection error:**
+
+```bash
+# Ensure db service is healthy
+docker-compose ps
+
+# Check logs
+./docker.sh logs
+```
+
+**Migration errors (e.g., "relation already exists"):**
+
+```bash
+# Option 1: Fake initial migration (recommended for development)
+docker-compose exec web python manage.py migrate --fake-initial
+
+# Option 2: Use database reset script
+chmod +x reset_db.sh
+./reset_db.sh
+```
+
+**Using the database reset script:**
+
+The `reset_db.sh` script provides an interactive menu to:
+- Reset database completely (fresh start, destroys all data)
+- Fake initial migration (skip 0001_initial if tables exist)
+- Show migration status
+- Run migrations manually
+
+**Clean rebuild:**
+
+```bash
+./docker.sh down
+docker-compose build --no-cache
+./docker.sh up
 ```
 
 ## License
