@@ -75,17 +75,18 @@
             <form method="post" action="{% url 'create_comment' post.slug %}">
                 {% csrf_token %}
                 <div class="mb-3">
-                    <label for="{{ comment_form.content.id_for_label }}" class="form-label">{{
-                        comment_form.content.label }}</label>
+                    <label for="id_content" class="form-label">Comment</label>
                     {% if comment_form.content.errors %}
-                    {{ comment_form.content|add_class:"form-control is-invalid" }}
+                    <textarea name="content" id="id_content" class="form-control is-invalid"
+                              placeholder="Write your comment here..." rows="4"></textarea>
                     <div class="invalid-feedback d-block mt-2">
                         {% for error in comment_form.content.errors %}
                         <small>{{ error }}</small><br>
                         {% endfor %}
                     </div>
                     {% else %}
-                    {{ comment_form.content|add_class:"form-control" }}
+                    <textarea name="content" id="id_content" class="form-control"
+                              placeholder="Write your comment here..." rows="4"></textarea>
                     {% endif %}
                 </div>
                 <button type="submit" class="btn btn-primary">Post Comment</button>
@@ -106,11 +107,11 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <strong class="text-dark">{{ comment.author.get_full_name|default:comment.author.username
-                            }}</strong>
+                        <strong class="text-dark">{{ comment.author.get_full_name|default:comment.author.username }}</strong>
                         <small class="text-muted d-block">{{ comment.created_at|date:"F d, Y \a\t H:i" }}</small>
                     </div>
-                    {% if user.is_authenticated and user == comment.author or user == post.author %}
+                    {% if user.is_authenticated %}
+                    {% if user == comment.author or user == post.author %}
                     <form method="post" action="{% url 'delete_comment' post.slug comment.id %}"
                           style="display: inline;">
                         {% csrf_token %}
@@ -118,6 +119,7 @@
                                 onclick="return confirm('Delete this comment?')">Delete
                         </button>
                     </form>
+                    {% endif %}
                     {% endif %}
                 </div>
                 <p class="card-text mt-2">{{ comment.content }}</p>
