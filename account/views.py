@@ -39,7 +39,7 @@ class RegisterView(FormErrorMessagesMixin, View):
 
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            form.save()
             messages.success(request, 'Account successfully created! Please log in.')
             return redirect('account:login')
         else:
