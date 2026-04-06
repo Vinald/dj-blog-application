@@ -1,0 +1,21 @@
+{% load widget_tweaks %}
+
+<div class="mb-{% if field.name == 'content' or field.name == 'image' %}4{% else %}3{% endif %}">
+    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+    {% if field.errors %}
+        {{ field|add_class:"form-control is-invalid" }}
+        <div class="invalid-feedback d-block mt-2">
+            {% for error in field.errors %}
+            <small>{{ error }}</small><br>
+            {% endfor %}
+        </div>
+    {% else %}
+        {{ field|add_class:"form-control" }}
+    {% endif %}
+    {% if field.name == 'slug' %}
+        <small class="text-muted d-block mt-2">URL-friendly version (e.g., my-first-post)</small>
+    {% elif field.name == 'image' %}
+        <small class="text-muted d-block mt-2">Optional: Add a featured image for your post</small>
+    {% endif %}
+</div>
+

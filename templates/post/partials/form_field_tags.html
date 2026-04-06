@@ -1,0 +1,21 @@
+{% load widget_tweaks %}
+
+<div class="mb-4">
+    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+    {% if field.errors %}
+    <div class="invalid-feedback d-block mt-2">
+        {% for error in field.errors %}
+        <small>{{ error }}</small><br>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="border rounded p-3 mt-2">
+        {% for widget in field %}
+        <div class="form-check mb-2">
+            {{ widget }}
+        </div>
+        {% endfor %}
+    </div>
+    <small class="text-muted d-block mt-2">Optional: Select tags to categorize your post</small>
+</div>
+
