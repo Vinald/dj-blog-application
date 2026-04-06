@@ -1,12 +1,39 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
 
 from .models import Post, Comment
 from .forms import PostForm, CommentForm
+
+
+class UserOwnsObjectMixin(UserPassesTestMixin):
+    """Mixin to check if user owns the object."""
+
+    def test_func(self):
+        obj = self.get_object()
+        return self.request.user == obj.author
+
+
+class UserOwnsCommentMixin(UserPassesTestMixin):
+    """Mixin to check if user owns the comment or is the post author."""
+
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author or self.request.user == comment.post.author
+
+
+class FormErrorMessagesMixin:
+    """Mixin to add form errors as messages."""
+
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f'{field}: {error}')
+        return super().form_invalid(form)
 
 
 class IndexView(ListView):
@@ -76,93 +103,54 @@ class PostDetailView(DetailView):
         return context
 
 
-class CreatePostView(LoginRequiredMixin, View):
+class CreatePostView(LoginRequiredMixin, FormErrorMessagesMixin, CreateView):
     """Class-based view for creating a new blog post."""
-    login_url = 'account:login'
+    model = Post
+    form_class = PostForm
     template_name = 'post/create_post.html'
+    login_url = 'account:login'
 
-    def get(self, request):
-        form = PostForm()
-        return render(request, self.template_name, {'form': form})
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        messages.success(self.request, 'Post created successfully!')
+        return super().form_valid(form)
 
-    def post(self, request):
-        form = PostForm(request.POST, request.FILES)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            messages.success(request, 'Post created successfully!')
-            return redirect('post_detail', slug=post.slug)
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'{field}: {error}')
-
-        return render(request, self.template_name, {'form': form})
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'slug': self.object.slug})
 
 
-class EditPostView(LoginRequiredMixin, View):
+class EditPostView(LoginRequiredMixin, UserOwnsObjectMixin, FormErrorMessagesMixin, UpdateView):
     """Class-based view for editing an existing blog post."""
-    login_url = 'account:login'
+    model = Post
+    form_class = PostForm
     template_name = 'post/edit_post.html'
-
-    def get(self, request, slug):
-        post = get_object_or_404(Post, slug=slug)
-
-        if request.user != post.author:
-            messages.error(request, 'You can only edit your own posts.')
-            return redirect('post_detail', slug=post.slug)
-
-        form = PostForm(instance=post)
-        return render(request, self.template_name, {'form': form, 'post': post})
-
-    def post(self, request, slug):
-        post = get_object_or_404(Post, slug=slug)
-
-        if request.user != post.author:
-            messages.error(request, 'You can only edit your own posts.')
-            return redirect('post_detail', slug=post.slug)
-
-        form = PostForm(request.POST, request.FILES, instance=post)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Post updated successfully!')
-            return redirect('post_detail', slug=post.slug)
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'{field}: {error}')
-
-        return render(request, self.template_name, {'form': form, 'post': post})
-
-
-class DeletePostView(LoginRequiredMixin, View):
-    """Class-based view for deleting a blog post."""
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
     login_url = 'account:login'
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Post updated successfully!')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'slug': self.object.slug})
+
+
+class DeletePostView(LoginRequiredMixin, UserOwnsObjectMixin, DeleteView):
+    """Class-based view for deleting a blog post."""
+    model = Post
     template_name = 'post/delete_post.html'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+    success_url = reverse_lazy('index')
+    login_url = 'account:login'
 
-    def get(self, request, slug):
-        post = get_object_or_404(Post, slug=slug)
-
-        if request.user != post.author:
-            messages.error(request, 'You can only delete your own posts.')
-            return redirect('post_detail', slug=post.slug)
-
-        return render(request, self.template_name, {'post': post})
-
-    def post(self, request, slug):
-        post = get_object_or_404(Post, slug=slug)
-
-        if request.user != post.author:
-            messages.error(request, 'You can only delete your own posts.')
-            return redirect('post_detail', slug=post.slug)
-
-        post.delete()
+    def delete(self, request, *args, **kwargs):
         messages.success(request, 'Post deleted successfully!')
-        return redirect('index')
+        return super().delete(request, *args, **kwargs)
 
 
-class CreateCommentView(LoginRequiredMixin, View):
+class CreateCommentView(LoginRequiredMixin, FormErrorMessagesMixin, View):
     """Class-based view for creating a comment on a post."""
     login_url = 'account:login'
 
@@ -177,9 +165,7 @@ class CreateCommentView(LoginRequiredMixin, View):
             comment.save()
             messages.success(request, 'Comment posted successfully!')
         else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'{error}')
+            self.form_invalid(form)
 
         return redirect('post_detail', slug=post.slug)
 

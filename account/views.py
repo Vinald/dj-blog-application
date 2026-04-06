@@ -6,21 +6,32 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import DetailView
+from django.views.generic import DetailView, UpdateView
 from django.utils.decorators import method_decorator
 
 from .forms import RegisterForm, LoginForm, UserUpdateForm, ProfileUpdateForm
 from .models import Profile
 
 
-class RegisterView(View):
+class FormErrorMessagesMixin:
+    """Mixin to add form errors as messages."""
+
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f'{field}: {error}')
+        return super().form_invalid(form)
+
+
+class RegisterView(FormErrorMessagesMixin, View):
     """Class-based view for user registration."""
+    template_name = 'account/register.html'
 
     def get(self, request):
         if request.user.is_authenticated:
             return redirect('index')
         form = RegisterForm()
-        return render(request, 'account/register.html', {'form': form})
+        return render(request, self.template_name, {'form': form})
 
     def post(self, request):
         if request.user.is_authenticated:
@@ -32,14 +43,12 @@ class RegisterView(View):
             messages.success(request, 'Account successfully created! Please log in.')
             return redirect('account:login')
         else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'{field}: {error}')
+            self.form_invalid(form)
 
-        return render(request, 'account/register.html', {'form': form})
+        return render(request, self.template_name, {'form': form})
 
 
-class LoginView(DjangoLoginView):
+class LoginView(FormErrorMessagesMixin, DjangoLoginView):
     """Class-based view for user login using Django's built-in LoginView."""
     form_class = LoginForm
     template_name = 'account/login.html'
@@ -95,7 +104,7 @@ class ProfileView(LoginRequiredMixin, DetailView):
         return context
 
 
-class EditProfileView(LoginRequiredMixin, View):
+class EditProfileView(LoginRequiredMixin, FormErrorMessagesMixin, View):
     """Class-based view for editing user profile."""
     login_url = 'account:login'
     template_name = 'account/edit_profile.html'
@@ -119,14 +128,13 @@ class EditProfileView(LoginRequiredMixin, View):
             messages.success(request, 'Your profile has been updated successfully!')
             return redirect('account:profile')
         else:
+            # Display form errors as messages
             if user_form.errors:
-                for field, errors in user_form.errors.items():
-                    for error in errors:
-                        messages.error(request, f'{field}: {error}')
+                self.request = request  # Ensure request is available for mixin
+                self.form_invalid(user_form)
             if profile_form.errors:
-                for field, errors in profile_form.errors.items():
-                    for error in errors:
-                        messages.error(request, f'{field}: {error}')
+                self.request = request  # Ensure request is available for mixin
+                self.form_invalid(profile_form)
 
         context = {
             'user_form': user_form,
