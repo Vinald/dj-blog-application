@@ -2,6 +2,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 
 from . import views
+from .session_views import ClearSessionsView
 
 app_name = 'account'
 
@@ -11,6 +12,7 @@ urlpatterns = [
     path('logout/', views.LogoutView.as_view(), name='logout'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('profile/edit/', views.EditProfileView.as_view(), name='edit_profile'),
+    path('sessions/clear/', ClearSessionsView.as_view(), name='clear_sessions'),
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='account/password_reset.html',
         email_template_name='registration/password_reset_email.html',

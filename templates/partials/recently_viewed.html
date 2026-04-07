@@ -1,0 +1,20 @@
+{% if recently_viewed_posts %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Recently Viewed Posts</h5>
+    </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            {% for post in recently_viewed_posts %}
+            <li class="list-group-item">
+                <a href="{% url 'post_detail' slug=post.slug %}" class="text-decoration-none">
+                    {{ post.title }}
+                </a>
+                <small class="text-muted d-block">{{ post.created_at|date:"M d, Y" }}</small>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+

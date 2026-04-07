@@ -19,9 +19,8 @@ password reset functionality.
 - Docker and Docker Compose support
 - PostgreSQL database support
 - Environment-based configuration
-
-### Enhanced Features (April 2026)
-
+- Django admin panel for managing posts, users, and comments
+- Django sessions to track recently viewed posts and page visit statistics
 - **Featured Images** - Upload and display post images
 - **Tags** - Organize posts with multiple tags
 - **Comments** - Full comment system with moderation
@@ -554,3 +553,213 @@ docker-compose build --no-cache
 ## License
 
 MIT License - see LICENSE file for details
+
+## Django Sessions Implementation
+
+### Overview
+
+This project includes a comprehensive session management system to track user behavior and preferences.
+
+### Session Configuration
+
+```python
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store in database
+SESSION_COOKIE_AGE = 1209600  # 2 weeks
+SESSION_COOKIE_SECURE = not DEBUG  # HTTPS only in production
+SESSION_COOKIE_HTTPONLY = True  # Protect from JS access
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Persist after browser closes
+SESSION_SAVE_EVERY_REQUEST = False  # Save only when modified (efficient)
+```
+
+### Session Features
+
+#### 1. Recently Viewed Posts Tracking
+
+- **Location**: `PostDetailView.get()` in `post/views.py`
+- **Description**: Tracks last 5 posts viewed by user
+- **Session Key**: `recently_viewed`
+- **Data Structure**: List of post IDs in order of viewing (most recent first)
+
+**Usage in templates:**
+
+```django
+{% for post in recently_viewed_posts %}
+    {{ post.title }}
+{% endfor %}
+```
+
+**Template partial:** `templates/partials/recently_viewed.html`
+
+#### 2. Page Visit Statistics
+
+- **Location**: `IndexView.get()` in `post/views.py`
+- **Description**: Counts page visits per session
+- **Session Key**: `page_visits`
+- **Data Structure**: Dictionary with page names and visit counts
+
+**Example session data:**
+
+```python
+{
+    'recently_viewed': ['5', '3', '1'],
+    'page_visits': {
+        'home_page': 42
+    }
+}
+```
+
+#### 3. Context Processor
+
+- **File**: `post/context_processors.py`
+- **Function**: `session_processor(request)`
+- **Purpose**: Makes recently viewed posts available to all templates
+- **Returns**: 
+  - `recently_viewed_posts`: List of actual Post objects (not just IDs)
+  - `page_visits`: Dictionary of page visit counts
+
+#### 4. Session Management
+
+- **Endpoint**: `/account/sessions/clear/`
+- **Method**: POST
+- **View**: `ClearSessionsView` in `account/session_views.py`
+- **Purpose**: Allows users to clear their session data
+- **Clears**: `recently_viewed`, `page_visits`
+
+### Using Sessions in Your Code
+
+#### Reading Session Data
+
+```python
+def my_view(request):
+    recently_viewed = request.session.get('recently_viewed', [])
+    page_visits = request.session.get('page_visits', {})
+```
+
+#### Writing Session Data
+
+```python
+def my_view(request):
+    # Add data
+    request.session['my_data'] = 'value'
+    
+    # Mark as modified (only needed for mutable data)
+    request.session.modified = True
+    
+    # Delete data
+    del request.session['my_data']
+```
+
+#### Session Methods
+
+```python
+request.session.flush()  # Delete entire session
+request.session.cycle_key()  # Create new session ID (security)
+request.session.clear()  # Delete all session data
+```
+
+### Security Best Practices
+
+✅ **Implemented:**
+
+- `SESSION_COOKIE_HTTPONLY = True` - JavaScript can't access
+- `SESSION_COOKIE_SAMESITE = 'Lax'` - CSRF protection
+- `SESSION_COOKIE_SECURE = not DEBUG` - HTTPS only in production
+- Database backend - more secure than files
+
+✅ **For Production:**
+
+Use Redis or Memcached for sessions (faster):
+
+```python
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+    }
+}
+```
+
+### Common Use Cases
+
+#### Remember Search Filters
+
+```python
+request.session['search_query'] = query
+request.session['filter_tags'] = tags
+request.session.modified = True
+```
+
+#### Shopping Cart (E-commerce)
+
+```python
+request.session['cart'] = {
+    'item_1': {'qty': 2, 'price': 19.99},
+    'item_2': {'qty': 1, 'price': 29.99}
+}
+```
+
+#### Wizard/Multi-step Forms
+
+```python
+request.session['form_step'] = 2
+request.session['form_data'] = {'field1': 'value1'}
+```
+
+### Database Management
+
+Sessions are stored in `django_session` table:
+
+```bash
+# Clean up expired sessions (run regularly in production)
+python manage.py clearsessions
+```
+
+Add to cron job for production:
+
+```bash
+0 0 * * * python /path/to/manage.py clearsessions
+```
+
+### Viewing Session Data in Admin
+
+1. Login to Django admin
+2. Navigate to Sessions table
+3. View session key, data, and expiry date
+
+### Testing Sessions
+
+```python
+# In tests
+def test_session_tracking(client):
+    response = client.get('/post/slug-1/')
+    assert 'recently_viewed' in client.session
+    assert '1' in client.session['recently_viewed']
+```
+
+### Performance Considerations
+
+- ✅ `SESSION_SAVE_EVERY_REQUEST = False` - Only saves when modified
+- ✅ Database backend - Good for small-medium projects
+- 🔄 For high-traffic sites, migrate to Redis/Memcached
+- 🧹 Run `clearsessions` command regularly to remove expired sessions
+
+### Troubleshooting Sessions
+
+**Sessions not persisting?**
+
+- Check `SESSION_COOKIE_SECURE = True` on HTTPS
+- Verify middleware order: SessionMiddleware must be before AuthenticationMiddleware
+
+**Sessions cleared unexpectedly?**
+
+- Check `SESSION_EXPIRE_AT_BROWSER_CLOSE` setting
+- Review `SESSION_COOKIE_AGE` timeout
+
+**Performance issues?**
+
+- Switch to Redis/Memcached backend
+- Run `clearsessions` command to clean up database
+
+

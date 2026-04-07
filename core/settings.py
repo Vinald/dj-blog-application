@@ -72,6 +72,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'post.context_processors.session_processor',
             ],
         },
     },
@@ -151,3 +152,11 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@blog.example.com')
 PASSWORD_RESET_TIMEOUT = int(os.getenv('PASSWORD_RESET_TIMEOUT', 3600))
 
+# Session Configuration
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store sessions in database
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+SESSION_COOKIE_SECURE = not DEBUG  # Only send over HTTPS in production
+SESSION_COOKIE_HTTPONLY = True  # Don't allow JavaScript access
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Keep sessions after browser closes
+SESSION_SAVE_EVERY_REQUEST = False  # Only save when data changes (more efficient)

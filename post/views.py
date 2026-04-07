@@ -48,6 +48,21 @@ class IndexView(ListView):
         context['title'] = 'Home'
         return context
 
+    def get(self, request, *args, **kwargs):
+        # Track page visits in session
+        if 'page_visits' not in request.session:
+            request.session['page_visits'] = {}
+
+        page_visits = request.session['page_visits']
+        page_key = 'home_page'
+
+        # Increment visit count for this page
+        page_visits[page_key] = page_visits.get(page_key, 0) + 1
+        request.session['page_visits'] = page_visits
+        request.session.modified = True
+
+        return super().get(request, *args, **kwargs)
+
 
 class AboutView(View):
     """Class-based view for about page."""
@@ -101,6 +116,26 @@ class PostDetailView(DetailView):
         context['comments'] = self.object.comments.all()
         context['comment_form'] = CommentForm()
         return context
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        # Track recently viewed posts in session
+        if 'recently_viewed' not in request.session:
+            request.session['recently_viewed'] = []
+
+        recently_viewed = request.session['recently_viewed']
+        post_id = str(self.object.id)
+
+        # Remove if already in list and re-add to make it most recent
+        if post_id in recently_viewed:
+            recently_viewed.remove(post_id)
+        recently_viewed.insert(0, post_id)
+
+        # Keep only last 5 viewed posts
+        request.session['recently_viewed'] = recently_viewed[:5]
+        request.session.modified = True
+
+        return response
 
 
 class CreatePostView(LoginRequiredMixin, FormErrorMessagesMixin, CreateView):
