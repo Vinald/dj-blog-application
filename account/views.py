@@ -20,7 +20,6 @@ class FormErrorMessagesMixin:
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{field}: {error}')
-        # Only call super().form_invalid() if the parent class has this method
         if hasattr(super(), 'form_invalid'):
             return super().form_invalid(form)
 
@@ -129,12 +128,11 @@ class EditProfileView(LoginRequiredMixin, FormErrorMessagesMixin, View):
             messages.success(request, 'Your profile has been updated successfully!')
             return redirect('account:profile')
         else:
-            # Display form errors as messages
             if user_form.errors:
-                self.request = request  # Ensure request is available for mixin
+                self.request = request
                 self.form_invalid(user_form)
             if profile_form.errors:
-                self.request = request  # Ensure request is available for mixin
+                self.request = request
                 self.form_invalid(profile_form)
 
         context = {
