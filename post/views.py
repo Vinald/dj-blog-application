@@ -17,6 +17,10 @@ class UserOwnsObjectMixin(UserPassesTestMixin):
         obj = self.get_object()
         return self.request.user == obj.author
 
+    def handle_no_permission(self):
+        """Redirect to the login page if user doesn't own the object."""
+        return redirect('account:login')
+
 
 class UserOwnsCommentMixin(UserPassesTestMixin):
     """Mixin to check if user owns the comment or is the post author."""
@@ -66,9 +70,10 @@ class IndexView(ListView):
 
 class AboutView(View):
     """Class-based view for about page."""
+    template_name = 'post/about.html'
 
     def get(self, request):
-        return render(request, 'post/about.html')
+        return render(request, template_name=self.template_name, context={'title': 'About'})
 
 
 class PostsView(ListView):
