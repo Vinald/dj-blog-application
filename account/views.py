@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import DetailView, UpdateView
+from django.views.generic import DetailView, UpdateView, FormView
 from django.utils.decorators import method_decorator
 
 from .forms import RegisterForm, LoginForm, UserUpdateForm, ProfileUpdateForm
@@ -20,7 +20,9 @@ class FormErrorMessagesMixin:
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f'{field}: {error}')
-        return super().form_invalid(form)
+        # Only call super().form_invalid() if the parent class has this method
+        if hasattr(super(), 'form_invalid'):
+            return super().form_invalid(form)
 
 
 class RegisterView(FormErrorMessagesMixin, View):
@@ -44,8 +46,7 @@ class RegisterView(FormErrorMessagesMixin, View):
             return redirect('account:login')
         else:
             self.form_invalid(form)
-
-        return render(request, self.template_name, {'form': form})
+            return render(request, self.template_name, {'form': form})
 
 
 class LoginView(FormErrorMessagesMixin, DjangoLoginView):
