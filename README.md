@@ -74,12 +74,23 @@ SECRET_KEY=your-secret-key
 EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
 DEFAULT_FROM_EMAIL=noreply@yourblog.com
 PASSWORD_RESET_TIMEOUT=3600
+DEBUG=True
+
+# Database Configuration (PostgreSQL)
+DB_NAME=blog_db
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_CONN_MAX_AGE=600
+DB_SSLMODE=prefer
 ```
 
 **Production:**
 
 ```
 SECRET_KEY=generate-new-key
+DEBUG=False
 EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
@@ -88,6 +99,18 @@ EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-app-password
 DEFAULT_FROM_EMAIL=noreply@yourblog.com
 PASSWORD_RESET_TIMEOUT=3600
+
+# Database Configuration (PostgreSQL)
+DB_NAME=blog_db
+DB_USER=blog_user
+DB_PASSWORD=your_very_secure_password
+DB_HOST=your-db-host.com
+DB_PORT=5432
+DB_CONN_MAX_AGE=600
+DB_SSLMODE=require
+
+# Cloud Deployment (Alternative - use instead of DB_* variables)
+# DATABASE_URL=postgresql://user:password@host:port/dbname
 ```
 
 ### Variables
@@ -95,6 +118,7 @@ PASSWORD_RESET_TIMEOUT=3600
 | Variable                 | Purpose                                                                                                                                         |
 |--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
 | `SECRET_KEY`             | Django secret key (generate with: `python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'`) |
+| `DEBUG`                  | `False` for production, `True` for development                                                                                                  |
 | `EMAIL_BACKEND`          | `django.core.mail.backends.console.EmailBackend` (dev) or `django.core.mail.backends.smtp.EmailBackend` (production)                            |
 | `EMAIL_HOST`             | SMTP server (e.g., smtp.gmail.com)                                                                                                              |
 | `EMAIL_PORT`             | SMTP port (usually 587)                                                                                                                         |
@@ -103,12 +127,91 @@ PASSWORD_RESET_TIMEOUT=3600
 | `EMAIL_HOST_PASSWORD`    | SMTP password or app password                                                                                                                   |
 | `DEFAULT_FROM_EMAIL`     | Sender email address                                                                                                                            |
 | `PASSWORD_RESET_TIMEOUT` | Reset link validity in seconds (3600 = 1 hour)                                                                                                  |
+| `DB_NAME`                | PostgreSQL database name (default: `blog_db`)                                                                                                   |
+| `DB_USER`                | PostgreSQL user (default: `postgres`)                                                                                                           |
+| `DB_PASSWORD`            | PostgreSQL password (default: `postgres`)                                                                                                       |
+| `DB_HOST`                | PostgreSQL host (default: `localhost`)                                                                                                          |
+| `DB_PORT`                | PostgreSQL port (default: `5432`)                                                                                                               |
+| `DB_CONN_MAX_AGE`        | Connection pooling timeout in seconds (default: `600`)                                                                                          |
+| `DB_SSLMODE`             | SSL mode: `disable`, `allow`, `prefer`, or `require` (use `require` in production)                                                              |
+| `DATABASE_URL`           | Alternative to DB_* variables for cloud deployments (Heroku, Docker, Railway)                                                                  |
 
 ### Security
 
 - **Never commit `.env` file** - Only `.env.example` should be in git
 - **Development:** Emails print to console - no provider needed
 - **Production:** Use real SMTP provider and enable security settings
+- **Database:** Use strong passwords and SSL mode `require` in production
+- **Credentials:** Store sensitive values in environment variables, never in code
+
+### Database Setup (PostgreSQL)
+
+#### Installation
+
+**macOS:**
+```bash
+brew install postgresql
+brew services start postgresql
+```
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install postgresql postgresql-contrib
+sudo systemctl start postgresql
+```
+
+**Docker:**
+```bash
+docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:latest
+```
+
+#### Create Database and User
+
+```bash
+# Connect to PostgreSQL
+psql -U postgres
+
+# Create database and user
+CREATE DATABASE blog_db;
+CREATE USER blog_user WITH PASSWORD 'secure_password';
+ALTER ROLE blog_user SET client_encoding TO 'utf8';
+ALTER ROLE blog_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE blog_user SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE blog_db TO blog_user;
+\q
+```
+
+#### Run Migrations
+
+```bash
+python3 manage.py migrate
+```
+
+#### Test Database Connection
+
+```bash
+python3 manage.py dbshell
+```
+
+### Database Configuration Details
+
+**Connection Pooling:**
+- `DB_CONN_MAX_AGE=600` reuses database connections
+- Improves performance by reducing connection overhead
+- Closes idle connections after 600 seconds
+
+**SSL Modes:**
+- `disable` - No SSL (development only)
+- `allow` - SSL attempted but not required
+- `prefer` - SSL preferred if available (development)
+- `require` - SSL required (production recommended)
+
+**Cloud Deployment Options:**
+
+1. **Heroku:** Uses `DATABASE_URL` automatically
+2. **Railway:** Set `DATABASE_URL` in environment
+3. **Docker:** Use `DATABASE_URL` or individual `DB_*` variables
+4. **Self-hosted:** Use individual `DB_*` variables
 
 ## Usage
 
@@ -233,15 +336,66 @@ Go to /admin/post/tag/ → see post count per tag
 
 ## Testing
 
-Create sample data:
+### Test Coverage Summary
+
+The application includes **116 comprehensive tests** covering:
+
+#### Account App Tests (40 tests)
+- **Authentication:** Registration, login, logout, password reset
+- **Profile Management:** Profile viewing, editing, bio, name, email
+- **Form Validation:** Duplicate detection, password matching, field validation
+- **Permissions:** Login requirements, access control
+- **Profile Model:** Relationships, cascading deletes, field validation
+
+#### Post App Tests (76 tests)
+- **Post CRUD:** Create, read, update, delete with proper permissions
+- **Comments:** Create, delete, permissions, ordering
+- **Tags:** Creation, relationships, multiple tags per post
+- **Views:** Index, about, posts list, user posts, post detail
+- **Permissions:** Owner-only operations, non-owner access denial
+- **Models:** Relationships, cascade deletes, auto-timestamps
+- **Forms:** Validation, error handling, tag selection
+
+### Running Tests
 
 ```bash
-python manage.py populate_posts
+# Run all tests
+python manage.py test
+
+# Run specific app tests
+python manage.py test account.tests
+python manage.py test account.tests_models
+python manage.py test post.tests_models
+python manage.py test post.tests_views
+
+# Run specific test class
+python manage.py test account.tests.AccountAuthTests
+python manage.py test post.tests_views.PostViewTests
+
+# Run specific test method
+python manage.py test account.tests.AccountAuthTests.test_user_login_valid
+
+# Run with verbose output
+python manage.py test --verbosity=2
+
+# Run with coverage report
+coverage run --source='.' manage.py test
+coverage report
+coverage html  # Creates htmlcov/index.html
 ```
 
-Creates demo user (username: demo, password: demo123) with 50 sample posts.
+### Test Files
 
-## New Features Documentation (April 2026)
+- `account/tests.py` - 31 authentication & profile tests
+- `account/tests_models.py` - 9 profile model tests (NEW)
+- `post/tests_models.py` - 27 post & comment model tests
+- `post/tests_views.py` - 49 post & comment view tests
+
+### Test Results
+
+✅ **Status:** All 116 tests passing  
+✅ **Coverage:** Account & Post apps fully tested  
+✅ **Production Ready:** Yes
 
 ### Images Feature
 

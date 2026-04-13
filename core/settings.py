@@ -83,6 +83,10 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# Database configuration: SQLite for development, PostgreSQL for production
+import dj_database_url
+
+# Default: SQLite for development
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -90,8 +94,7 @@ DATABASES = {
     }
 }
 
-# Support PostgreSQL via DATABASE_URL environment variable
-import dj_database_url
+# Use PostgreSQL if DATABASE_URL is provided (production/deployed environments)
 db_url = os.getenv('DATABASE_URL')
 if db_url:
     DATABASES['default'] = dj_database_url.config(
@@ -99,6 +102,37 @@ if db_url:
         conn_max_age=600,
         engine='django.db.backends.postgresql',
     )
+    # Add SSL mode if using DATABASE_URL in production
+    if not DEBUG:
+        DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
+    else:
+        DATABASES['default']['OPTIONS'] = {'sslmode': 'prefer'}
+# Use PostgreSQL with individual DB_* variables if not using DATABASE_URL
+elif not DEBUG:
+    # Production environment without DATABASE_URL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'blog_db'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'ATOMIC_REQUESTS': True,
+            'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '600')),
+            'OPTIONS': {
+                'sslmode': os.getenv('DB_SSLMODE', 'require'),
+            },
+            'TEST': {
+                'NAME': os.getenv('TEST_DB_NAME', 'blog_db_test'),
+                'USER': os.getenv('TEST_DB_USER', os.getenv('DB_USER', 'postgres')),
+                'PASSWORD': os.getenv('TEST_DB_PASSWORD', os.getenv('DB_PASSWORD', 'postgres')),
+                'HOST': os.getenv('TEST_DB_HOST', os.getenv('DB_HOST', 'localhost')),
+                'PORT': os.getenv('TEST_DB_PORT', os.getenv('DB_PORT', '5432')),
+                'CHARSET': 'utf8',
+            }
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
